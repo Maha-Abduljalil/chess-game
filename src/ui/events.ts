@@ -19,7 +19,7 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
       <div class="landing-card">
         <div class="hero-copy">
           <span class="hero-eyebrow">Real-time Chess</span>
-          <h1>Play online with Google</h1>
+          <h1>Play Online With Your Friends</h1>
           <p>Sign in, create a game, and invite a friend with a game ID.</p>
         </div>
         <div class="auth-panel">
