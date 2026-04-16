@@ -1,5 +1,5 @@
 import type { BoardState } from "../core/Board";
-import type { Piece, PieceColor, PieceType } from "../core/Piece";
+import type { PieceColor, PieceType } from "../core/Piece";
 
 export interface RenderOptions {
   validMoves?: string[];
