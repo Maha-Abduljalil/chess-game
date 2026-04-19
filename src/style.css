@@ -486,24 +486,22 @@ body::before {
 .square.last-move.dark { background: #b9c12f; }
 
 /* --- Piece Rendering --- */
-.piece-symbol {
-  font-size: 52px;
+.piece-img {
+  width: 85%;
+  height: 85%;
+  object-fit: contain;
   user-select: none;
-  line-height: 1;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
-  transition: transform 0.15s var(--ease-spring);
-  cursor: grab;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+  transition: transform 0.15s var(--ease-spring), filter 0.15s ease;
   z-index: 2;
 }
 
-.piece-symbol.white { color: #ffffff; }
-.piece-symbol.black { color: #1a1a1a; }
-
-.square:hover .piece-symbol {
+.square:hover .piece-img {
   transform: scale(1.08);
 }
 
-.square.selected .piece-symbol {
+.square.selected .piece-img {
   transform: scale(1.12);
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
 }
@@ -514,7 +512,7 @@ body::before {
   to { opacity: 1; transform: scale(1); }
 }
 
-.piece-symbol.animated {
+.piece-img.animated {
   animation: pieceAppear 0.3s var(--ease-spring) both;
 }
 
@@ -900,8 +898,9 @@ body::before {
     font-size: 1.8rem;
   }
 
-  .piece-symbol {
-    font-size: 30px;
+  .piece-img {
+    width: 80%;
+    height: 80%;
   }
 
   .board-frame {

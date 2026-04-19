@@ -43,12 +43,14 @@ export function renderBoard(
       cell.onclick = () => onClick(sq);
 
       const piece = board[sq];
-     if (piece) {
-  const span = document.createElement("span");
-  span.textContent = getSymbol(piece.color, piece.type);
-  span.className = "piece-symbol " + piece.color; 
-  cell.appendChild(span);
-}
+      if (piece) {
+        const img = document.createElement("img");
+        img.src = `/pieces/${piece.color}_${piece.type}.png`;
+        img.alt = `${piece.color} ${piece.type}`;
+        img.className = "piece-img " + piece.color;
+        img.draggable = false;
+        cell.appendChild(img);
+      }
 
       container.appendChild(cell);
     }
