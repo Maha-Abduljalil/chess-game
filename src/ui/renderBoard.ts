@@ -45,9 +45,9 @@ export function renderBoard(
       const piece = board[sq];
       if (piece) {
         const img = document.createElement("img");
-        img.src = `/pieces/${piece.color}_${piece.type}.png`;
+        img.src = getPieceImageUrl(piece.color, piece.type);
         img.alt = `${piece.color} ${piece.type}`;
-        img.className = "piece-img " + piece.color;
+        img.className = "piece-img";
         img.draggable = false;
         cell.appendChild(img);
       }
@@ -57,11 +57,6 @@ export function renderBoard(
   }
 }
 
-const symbols: Record<PieceColor, Record<PieceType, string>> = {
-  white: { king: "♔", queen: "♕", rook: "♖", bishop: "♗", knight: "♘", pawn: "♙" },
-  black: { king: "♚", queen: "♛", rook: "♜", bishop: "♝", knight: "♞", pawn: "♟" }
-};
-
-function getSymbol(color: PieceColor, type: PieceType): string {
-  return symbols[color][type];
+function getPieceImageUrl(color: PieceColor, type: PieceType): string {
+  return `/pieces/${color}_${type}.png`;
 }

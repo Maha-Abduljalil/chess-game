@@ -487,8 +487,8 @@ body::before {
 
 /* --- Piece Rendering --- */
 .piece-img {
-  width: 85%;
-  height: 85%;
+  width: 82%;
+  height: 82%;
   object-fit: contain;
   user-select: none;
   pointer-events: none;
@@ -499,11 +499,12 @@ body::before {
 
 .square:hover .piece-img {
   transform: scale(1.08);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
 }
 
 .square.selected .piece-img {
   transform: scale(1.12);
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.55));
 }
 
 /* Piece entrance animation */
@@ -512,8 +513,8 @@ body::before {
   to { opacity: 1; transform: scale(1); }
 }
 
-.piece-img.animated {
-  animation: pieceAppear 0.3s var(--ease-spring) both;
+.piece-img {
+  animation: pieceAppear 0.25s var(--ease-spring) both;
 }
 
 /* --- Captured Pieces Tray --- */
@@ -898,9 +899,8 @@ body::before {
     font-size: 1.8rem;
   }
 
-  .piece-img {
-    width: 80%;
-    height: 80%;
+  .piece-symbol {
+    font-size: 30px;
   }
 
   .board-frame {
