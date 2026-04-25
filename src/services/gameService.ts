@@ -16,7 +16,8 @@ export type GameDocument = {
   };
   board: Record<string, any>;
   turn: "white" | "black";
-  status: "waiting" | "playing";
+  status: "waiting" | "playing" | "checkmate" | "stalemate" | "draw";
+  winner?: string;
 };
 
 const gamesCollection = collection(db, "games");
@@ -63,11 +64,24 @@ export function listenToGame(gameId: string, callback: (data: GameDocument | nul
   });
 }
 
-export async function makeMove(gameId: string, board: Record<string, any>, turn: "white" | "black") {
+export async function makeMove(
+  gameId: string, 
+  board: Record<string, any>, 
+  turn: "white" | "black",
+  status: "playing" | "checkmate" | "stalemate" | "draw" = "playing",
+  winner?: string
+) {
   const ref = doc(db, "games", gameId);
 
-  await updateDoc(ref, {
+  const payload: any = {
     board,
-    turn
-  });
+    turn,
+    status
+  };
+
+  if (winner) {
+    payload.winner = winner;
+  }
+
+  await updateDoc(ref, payload);
 }

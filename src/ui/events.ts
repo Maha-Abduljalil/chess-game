@@ -1,4 +1,4 @@
-﻿import { Game } from "../core/Game";
+import { Game } from "../core/Game";
 import { Board } from "../core/Board";
 import type { PieceColor } from "../core/Piece";
 import { renderBoard } from "./renderBoard";
@@ -57,6 +57,14 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
     </div>
 
     <div id="toast" class="toast"></div>
+
+    <div id="game-over-modal" class="hidden" style="position: fixed; inset: 0; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; flex-direction: column;">
+      <div style="background: var(--bg-secondary); padding: 40px; border-radius: 20px; box-shadow: var(--shadow-panel); text-align: center; border: 1px solid var(--bg-glass-border);">
+        <h2 id="game-over-title" style="font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 10px; color: var(--accent);">Game Over</h2>
+        <p id="game-over-message" style="color: var(--text-secondary); margin-bottom: 24px;">Message</p>
+        <button id="btn-new-game" class="btn btn-primary">Play Again</button>
+      </div>
+    </div>
   `;
 
   buildLabels();
@@ -74,6 +82,15 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
   const gameStateText = document.getElementById("game-state-text")!;
   const gameIdDisplay = document.getElementById("game-id-display")!;
   const statusText = document.getElementById("status-text")!;
+  const gameOverModal = document.getElementById("game-over-modal")!;
+  const gameOverTitle = document.getElementById("game-over-title")!;
+  const gameOverMessage = document.getElementById("game-over-message")!;
+  const btnNewGame = document.getElementById("btn-new-game")!;
+
+  btnNewGame.onclick = () => {
+    gameOverModal.classList.add("hidden");
+    setGameScreenActive(false);
+  };
 
   function setGameScreenActive(active: boolean) {
     landingScreen.classList.toggle("hidden", active);
@@ -100,47 +117,20 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
     if (!currentGameData || !currentUserColor || !game.selectedSquare) return [];
     if (!game.isOwnPiece(game.selectedSquare)) return [];
 
-    const moves: string[] = [];
-    const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
-    const ranks = ["1", "2", "3", "4", "5", "6", "7", "8"];
-
-    for (const f of files) {
-      for (const r of ranks) {
-        const sq = f + r;
-        if (game.isValidMove(game.selectedSquare, sq)) {
-          moves.push(sq);
-        }
-      }
-    }
-
-    return moves;
+    return game.getLegalMoves(game.selectedSquare);
   }
 
   function findKingInCheck(): string | null {
+    if (!game.isInCheck(game.turn)) return null;
+
     const state = game.getBoardState();
     for (const sq of Object.keys(state)) {
       const p = state[sq];
       if (p && p.type === "king" && p.color === game.turn) {
-        if (isKingUnderAttack(sq, game.turn)) return sq;
+        return sq;
       }
     }
     return null;
-  }
-
-  function isKingUnderAttack(kingSq: string, kingColor: PieceColor): boolean {
-    const state = game.getBoardState();
-    const opponentColor = kingColor === "white" ? "black" : "white";
-    for (const sq of Object.keys(state)) {
-      const p = state[sq];
-      if (p && p.color === opponentColor) {
-        const savedTurn = game.turn;
-        game.turn = opponentColor;
-        const canAttack = game.isValidMove(sq, kingSq);
-        game.turn = savedTurn;
-        if (canAttack) return true;
-      }
-    }
-    return false;
   }
 
   function updateStatusBar() {
@@ -151,6 +141,21 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
 
     if (currentGameData.status === "waiting") {
       statusText.textContent = "Waiting for an opponent…";
+      return;
+    }
+
+    if (currentGameData.status === "checkmate") {
+      statusText.textContent = `Checkmate! ${currentGameData.winner} wins.`;
+      return;
+    }
+
+    if (currentGameData.status === "stalemate") {
+      statusText.textContent = "Stalemate! Game is a draw.";
+      return;
+    }
+
+    if (currentGameData.status === "draw") {
+      statusText.textContent = "Game drawn.";
       return;
     }
 
@@ -165,7 +170,13 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
       return;
     }
 
-    gameStateText.textContent = currentGameData.status === "waiting" ? "Waiting for opponent…" : `${game.turn.charAt(0).toUpperCase() + game.turn.slice(1)} to move`;
+    let stateText = "";
+    if (currentGameData.status === "waiting") stateText = "Waiting for opponent…";
+    else if (currentGameData.status === "checkmate") stateText = "Checkmate";
+    else if (currentGameData.status === "stalemate" || currentGameData.status === "draw") stateText = "Draw";
+    else stateText = `${game.turn.charAt(0).toUpperCase() + game.turn.slice(1)} to move`;
+
+    gameStateText.textContent = stateText;
     gameIdDisplay.innerHTML = `
       <div class="game-id-display" title="Click to copy">
         <span class="label">Game ID</span>
@@ -183,13 +194,30 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
   function refresh() {
     const options: RenderOptions = {
       validMoves: getValidMoves(),
-      lastMove: null,
+      lastMove: null, // Note: not fully implemented in DB schema yet
       inCheck: findKingInCheck()
     };
 
     renderBoard(boardEl, game.getBoardState(), game.selectedSquare, handleClick, options);
     updateStatusBar();
     updateTopBar();
+
+    // Show Game Over modal if status changed
+    if (currentGameData && (currentGameData.status === "checkmate" || currentGameData.status === "stalemate" || currentGameData.status === "draw")) {
+      gameOverModal.classList.remove("hidden");
+      gameOverModal.style.display = "flex";
+      
+      if (currentGameData.status === "checkmate") {
+        gameOverTitle.textContent = "Checkmate!";
+        gameOverMessage.textContent = `${currentGameData.winner} wins by checkmate.`;
+      } else {
+        gameOverTitle.textContent = "Draw";
+        gameOverMessage.textContent = currentGameData.status === "stalemate" ? "Stalemate!" : "Game ended in a draw.";
+      }
+    } else {
+      gameOverModal.classList.add("hidden");
+      gameOverModal.style.display = "none";
+    }
   }
 
   async function handleClick(square: string) {
@@ -202,11 +230,23 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
       return;
     }
 
-    if (game.selectedSquare && game.isValidMove(game.selectedSquare, square)) {
+    if (game.selectedSquare && game.getLegalMoves(game.selectedSquare).includes(square)) {
       const fromSquare = game.selectedSquare;
-      if (game.move(fromSquare, square)) {
+      if (game.move(fromSquare, square, "queen")) { // auto queen promotion for now
+        
+        // Evaluate new state to see if the move caused a checkmate/stalemate
+        const newStatus = game.getGameState();
+        let winnerName = undefined;
+        if (newStatus === "checkmate") {
+           // If it's checkmate, the person who just moved (the opposite of the NEW turn) won
+           winnerName = currentUserColor === "white" ? "White" : "Black";
+        }
+
+        // Map "waiting" to "playing" since the game is active after a move
+        const status: "playing" | "checkmate" | "stalemate" | "draw" = newStatus === "waiting" ? "playing" : newStatus as "playing" | "checkmate" | "stalemate" | "draw";
+
         try {
-          await makeMove(currentGameId, game.getBoardState(), game.turn);
+          await makeMove(currentGameId, game.getBoardState(), game.turn, status, winnerName);
         } catch {
           showToast("Move failed. Please try again.");
         }

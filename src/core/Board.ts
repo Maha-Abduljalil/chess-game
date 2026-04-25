@@ -2,14 +2,57 @@ import type { Piece } from "./Piece";
 
 export type BoardState = Record<string, Piece | null>;
 
-const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
-const ranks = ["1", "2", "3", "4", "5", "6", "7", "8"];
+/** Tracks which castling-relevant pieces have moved */
+export interface CastleFlags {
+  whiteKingMoved: boolean;
+  whiteRookAMoved: boolean; // a1
+  whiteRookHMoved: boolean; // h1
+  blackKingMoved: boolean;
+  blackRookAMoved: boolean; // a8
+  blackRookHMoved: boolean; // h8
+}
+
+/** Info needed for en passant detection on the next move */
+export interface EnPassantTarget {
+  square: string;   // the square the capturing pawn moves TO (the "ghost" square)
+  pawnSquare: string; // the actual square the double-pushed pawn sits on
+}
+
+export const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
+export const RANKS = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
 export class Board {
   state: BoardState;
+  castleFlags: CastleFlags;
+  enPassantTarget: EnPassantTarget | null;
 
-  constructor(state?: BoardState) {
+  constructor(
+    state?: BoardState,
+    castleFlags?: CastleFlags,
+    enPassantTarget?: EnPassantTarget | null
+  ) {
     this.state = state ? { ...state } : Board.emptyState();
+    this.castleFlags = castleFlags
+      ? { ...castleFlags }
+      : {
+          whiteKingMoved: false,
+          whiteRookAMoved: false,
+          whiteRookHMoved: false,
+          blackKingMoved: false,
+          blackRookAMoved: false,
+          blackRookHMoved: false,
+        };
+    this.enPassantTarget = enPassantTarget ? { ...enPassantTarget } : null;
+  }
+
+  /** Deep clone — copies board state, castle flags, and en passant target */
+  clone(): Board {
+    const clonedState: BoardState = {};
+    for (const sq of Object.keys(this.state)) {
+      const p = this.state[sq];
+      clonedState[sq] = p ? { ...p } : null;
+    }
+    return new Board(clonedState, { ...this.castleFlags }, this.enPassantTarget ? { ...this.enPassantTarget } : null);
   }
 
   static getFile(square: string): string {
@@ -24,10 +67,18 @@ export class Board {
     return /^[a-h][1-8]$/.test(square);
   }
 
+  static toSquare(fileIndex: number, rank: number): string {
+    return FILES[fileIndex] + rank;
+  }
+
+  static fileIndex(file: string): number {
+    return file.charCodeAt(0) - "a".charCodeAt(0);
+  }
+
   static emptyState(): BoardState {
     const state: BoardState = {};
-    for (const rank of ranks) {
-      for (const file of files) {
+    for (const rank of RANKS) {
+      for (const file of FILES) {
         state[`${file}${rank}`] = null;
       }
     }
@@ -68,7 +119,7 @@ export class Board {
       ["e7", { type: "pawn", color: "black" }],
       ["f7", { type: "pawn", color: "black" }],
       ["g7", { type: "pawn", color: "black" }],
-      ["h7", { type: "pawn", color: "black" }]
+      ["h7", { type: "pawn", color: "black" }],
     ];
 
     for (const [square, piece] of placement) {
