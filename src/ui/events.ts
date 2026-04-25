@@ -178,17 +178,15 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
 
     gameStateText.textContent = stateText;
     gameIdDisplay.innerHTML = `
-      <div class="game-id-display" title="Click to copy">
-        <span class="label">Game ID</span>
-        <span class="id-text">${currentGameId}</span>
-        <span class="copy-icon">📋</span>
-      </div>`;
+      <span class="label">Game ID</span>
+      <span class="id-text">${currentGameId}</span>
+      <span class="copy-icon">📋</span>`;
+    gameIdDisplay.title = "Click to copy";
 
-    const copyButton = gameIdDisplay.querySelector(".game-id-display");
-    copyButton?.addEventListener("click", () => {
+    gameIdDisplay.onclick = () => {
       navigator.clipboard.writeText(currentGameId!);
       showToast("Game ID copied");
-    });
+    };
   }
 
   function refresh() {

@@ -271,6 +271,13 @@
     width: 100%;
     flex-wrap: wrap;
   }
+  .top-bar h2 {
+    font-family: "Cormorant Garamond", "Playfair Display", serif;
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
 
   .app-header {
     text-align: center;
@@ -291,6 +298,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    width: 100%;
   }
 
   @keyframes fadeSlideDown {
@@ -421,6 +431,9 @@
   /* ---------- Board Frame ---------- */
   .board-frame {
     position: relative;
+    width: 100%;
+    max-width: min(90vw, 600px);
+    margin: 0 auto;
     padding: clamp(18px, 2.4vw, 28px) clamp(20px, 2.6vw, 30px);
     background: var(--gradient-board-frame);
     border: 1px solid var(--bg-glass-border);
@@ -451,13 +464,13 @@
   .rank-labels {
     left: 6px;
     top: clamp(18px, 2.4vw, 28px);
-    height: calc(var(--square-size) * 8);
+    bottom: clamp(18px, 2.4vw, 28px);
     flex-direction: column;
   }
   .file-labels {
     bottom: 6px;
     left: clamp(20px, 2.6vw, 30px);
-    width: calc(var(--square-size) * 8);
+    right: clamp(20px, 2.6vw, 30px);
   }
   .rank-labels span, .file-labels span {
     flex: 1;
@@ -470,8 +483,11 @@
   /* ---------- Chess Grid ---------- */
   .chess-board {
     display: grid;
-    grid-template-columns: repeat(8, var(--square-size));
-    grid-template-rows: repeat(8, var(--square-size));
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
     border-radius: var(--board-radius);
     overflow: hidden;
     position: relative;
@@ -481,8 +497,8 @@
   }
 
   .square {
-    width: var(--square-size);
-    height: var(--square-size);
+    width: 100%;
+    height: 100%;
     display: grid;
     place-items: center;
     cursor: pointer;
@@ -800,12 +816,15 @@
     font-size: 0.6rem;
     letter-spacing: 0.10em;
     font-family: "Inter", sans-serif;
+    flex-shrink: 0;
+  }
+  .game-id-display .copy-icon {
+    flex-shrink: 0;
   }
   .game-id-display .id-text {
     flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    word-break: break-all;
+    white-space: normal;
     color: var(--gold-soft);
     font-weight: 600;
     letter-spacing: 0.04em;
@@ -1036,19 +1055,25 @@
       grid-template-columns: 1fr;
     }
     .game-container > * {
-      max-width: 540px;
+      max-width: 600px;
       width: 100%;
       justify-self: center;
     }
     .board-wrapper { order: -1; }
   }
 
+  @media (max-width: 768px) {
+    .board-wrapper {
+      flex-direction: column;
+    }
+  }
+
   @media (max-width: 680px) {
     .app-header h1 { font-size: 2.2rem; }
     .board-frame { padding: 16px 18px; }
     .board-frame::before { inset: 10px; }
-    .rank-labels { left: 4px; top: 16px; }
-    .file-labels { bottom: 4px; left: 18px; }
+    .rank-labels { left: 4px; top: 16px; bottom: 16px; }
+    .file-labels { bottom: 4px; left: 18px; right: 18px; }
     .rank-labels span, .file-labels span { font-size: 0.62rem; }
     .top-bar { flex-direction: column; align-items: stretch; gap: 12px; }
   }
@@ -1060,10 +1085,12 @@
     .hero-copy h1 { font-size: 2.4rem; }
     .board-frame { padding: 12px 14px; border-radius: 14px; }
     .board-frame::before { inset: 8px; }
-    .rank-labels { top: 12px; left: 4px; }
-    .file-labels { left: 14px; bottom: 4px; }
+    .rank-labels { top: 12px; bottom: 12px; left: 4px; }
+    .file-labels { left: 14px; right: 14px; bottom: 4px; }
     .rank-labels span, .file-labels span { font-size: 0.55rem; }
-    .game-id-display { width: 100%; justify-content: space-between; }
+    .game-id-display { width: 100%; justify-content: space-between; align-items: center; }
+    .top-bar h2 { font-size: 1.6rem; text-align: center; }
+    .game-state-text { text-align: center; }
     .btn, .input-field { min-height: 46px; }
     .join-row { flex-direction: column; }
     .join-row .btn { width: 100%; }
