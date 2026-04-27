@@ -1,5 +1,4 @@
 import { Game } from "../core/Game";
-import { Board } from "../core/Board";
 import type { PieceColor } from "../core/Piece";
 import { renderBoard } from "./renderBoard";
 import type { RenderOptions } from "./renderBoard";
@@ -178,21 +177,23 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
 
     gameStateText.textContent = stateText;
     gameIdDisplay.innerHTML = `
-      <span class="label">Game ID</span>
-      <span class="id-text">${currentGameId}</span>
-      <span class="copy-icon">📋</span>`;
-    gameIdDisplay.title = "Click to copy";
+      <div class="game-id-display" title="Click to copy">
+        <span class="label">Game ID</span>
+        <span class="id-text">${currentGameId}</span>
+        <span class="copy-icon">📋</span>
+      </div>`;
 
-    gameIdDisplay.onclick = () => {
+    const copyButton = gameIdDisplay.querySelector(".game-id-display");
+    copyButton?.addEventListener("click", () => {
       navigator.clipboard.writeText(currentGameId!);
       showToast("Game ID copied");
-    };
+    });
   }
 
   function refresh() {
     const options: RenderOptions = {
       validMoves: getValidMoves(),
-      lastMove: null, // Note: not fully implemented in DB schema yet
+      lastMove: null, 
       inCheck: findKingInCheck()
     };
 
@@ -200,7 +201,6 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
     updateStatusBar();
     updateTopBar();
 
-    // Show Game Over modal if status changed
     if (currentGameData && (currentGameData.status === "checkmate" || currentGameData.status === "stalemate" || currentGameData.status === "draw")) {
       gameOverModal.classList.remove("hidden");
       gameOverModal.style.display = "flex";
@@ -230,21 +230,18 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
 
     if (game.selectedSquare && game.getLegalMoves(game.selectedSquare).includes(square)) {
       const fromSquare = game.selectedSquare;
-      if (game.move(fromSquare, square, "queen")) { // auto queen promotion for now
+      if (game.move(fromSquare, square, "queen")) { 
         
-        // Evaluate new state to see if the move caused a checkmate/stalemate
         const newStatus = game.getGameState();
         let winnerName = undefined;
         if (newStatus === "checkmate") {
-           // If it's checkmate, the person who just moved (the opposite of the NEW turn) won
            winnerName = currentUserColor === "white" ? "White" : "Black";
         }
 
-        // Map "waiting" to "playing" since the game is active after a move
         const status: "playing" | "checkmate" | "stalemate" | "draw" = newStatus === "waiting" ? "playing" : newStatus as "playing" | "checkmate" | "stalemate" | "draw";
 
         try {
-          await makeMove(currentGameId, game.getBoardState(), game.turn, status, winnerName);
+          await makeMove(currentGameId, game.fen(), game.turn, status, winnerName);
         } catch {
           showToast("Move failed. Please try again.");
         }
@@ -276,8 +273,9 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
       }
 
       currentGameData = data;
-      game.board = new Board(data.board);
-      game.turn = data.turn;
+      if (data.fen) {
+        game.load(data.fen);
+      }
       game.clearSelection();
       setGameScreenActive(true);
       refresh();

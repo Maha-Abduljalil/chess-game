@@ -7,14 +7,14 @@ import {
   onSnapshot,
   getDoc
 } from "firebase/firestore";
-import { Board } from "../core/Board";
+import { Chess } from "chess.js";
 
 export type GameDocument = {
   players: {
     white: string;
     black: string | null;
   };
-  board: Record<string, any>;
+  fen: string;
   turn: "white" | "black";
   status: "waiting" | "playing" | "checkmate" | "stalemate" | "draw";
   winner?: string;
@@ -23,14 +23,14 @@ export type GameDocument = {
 const gamesCollection = collection(db, "games");
 
 export async function createGame(userId: string) {
-  const startingBoard = Board.startingBoard().snapshot();
+  const chess = new Chess();
 
   const docRef = await addDoc(gamesCollection, {
     players: {
       white: userId,
       black: null
     },
-    board: startingBoard,
+    fen: chess.fen(),
     turn: "white",
     status: "waiting"
   });
@@ -66,7 +66,7 @@ export function listenToGame(gameId: string, callback: (data: GameDocument | nul
 
 export async function makeMove(
   gameId: string, 
-  board: Record<string, any>, 
+  fen: string, 
   turn: "white" | "black",
   status: "playing" | "checkmate" | "stalemate" | "draw" = "playing",
   winner?: string
@@ -74,7 +74,7 @@ export async function makeMove(
   const ref = doc(db, "games", gameId);
 
   const payload: any = {
-    board,
+    fen,
     turn,
     status
   };
