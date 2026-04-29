@@ -1,4 +1,5 @@
 import { Game } from "../core/Game";
+import { playSound } from "../services/audio";
 import type { PieceColor } from "../core/Piece";
 import { renderBoard } from "./renderBoard";
 import type { RenderOptions } from "./renderBoard";
@@ -18,7 +19,7 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
       <div class="landing-card">
         <div class="hero-copy">
           <span class="hero-eyebrow">Real-time Chess</span>
-          <h1>Play Online With Your Friends</h1>
+         <h1>Play Online With Your Friends</h1>
           <p>Sign in, create a game, and invite a friend with a game ID.</p>
         </div>
         <div class="auth-panel">
@@ -35,8 +36,11 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
 
     <div class="game-screen hidden">
       <div class="top-bar">
-        <div>
-          <h2>Chess Match</h2>
+        <div class="title-group">
+          <div class="title-header">
+            <img src="/icon.png" class="app-icon" alt="App Icon">
+            <h2>Chess Match</h2>
+          </div>
           <p id="game-state-text" class="game-state-text">Waiting for opponent…</p>
         </div>
         <div id="game-id-display" class="game-id-display"></div>
@@ -230,8 +234,14 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
 
     if (game.selectedSquare && game.getLegalMoves(game.selectedSquare).includes(square)) {
       const fromSquare = game.selectedSquare;
+      const isCapture = !!game.getBoardState()[square];
       if (game.move(fromSquare, square, "queen")) { 
         
+        const isCheck = game.isInCheck(game.turn);
+        if (isCheck) playSound("check");
+        else if (isCapture) playSound("capture");
+        else playSound("move");
+
         const newStatus = game.getGameState();
         let winnerName = undefined;
         if (newStatus === "checkmate") {
@@ -272,10 +282,34 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
         return;
       }
 
+      const oldFen = currentGameData?.fen;
+      const oldStatus = currentGameData?.status;
+      const oldPieceCount = Object.keys(game.getBoardState()).length;
+
       currentGameData = data;
       if (data.fen) {
         game.load(data.fen);
       }
+      const newPieceCount = Object.keys(game.getBoardState()).length;
+
+      if (oldStatus === "waiting" && data.status === "playing") {
+        playSound("start");
+      }
+
+      if ((data.status === "checkmate" || data.status === "stalemate" || data.status === "draw") && oldStatus === "playing") {
+        playSound("end");
+      }
+
+      if (oldFen && oldFen !== data.fen && game.turn === currentUserColor) {
+        if (game.isInCheck(game.turn)) {
+          playSound("check");
+        } else if (newPieceCount < oldPieceCount) {
+          playSound("capture");
+        } else {
+          playSound("move");
+        }
+      }
+
       game.clearSelection();
       setGameScreenActive(true);
       refresh();

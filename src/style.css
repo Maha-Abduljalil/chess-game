@@ -164,7 +164,7 @@
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-feature-settings: "ss01", "cv11", "kern";
     /*background-color: var(--bg-primary);*/
-    background-image: url("https://i.ibb.co/tk4sq0n/BG.png");
+    background-image: url('/_backgroundimage.jpg');
     background-repeat: no-repeat;
     background-position: center center;
     background-size: cover;
@@ -198,7 +198,7 @@
     }
   }
 
-  #app, main, .app-root { position: relative; z-index: 1; }
+  #app, main { position: relative; z-index: 1; }
   .hidden { display: none !important; }
 
   ::selection { background: var(--accent-glow); color: var(--text-primary); }
@@ -223,7 +223,7 @@
    4. Layout
    ========================================= */
 @layer layout {
-  .landing-screen, .game-screen, .app-layout {
+  .landing-screen, .game-screen {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -271,6 +271,27 @@
     width: 100%;
     flex-wrap: wrap;
   }
+  .top-bar .title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .top-bar .title-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .top-bar .app-icon {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 12px rgba(184, 155, 94, 0.35));
+    transition: transform var(--dur-base) var(--ease-spring), filter var(--dur-base) var(--ease-out);
+  }
+  .top-bar .app-icon:hover {
+    transform: scale(1.08) rotate(-6deg);
+    filter: drop-shadow(0 6px 16px rgba(184, 155, 94, 0.5));
+  }
   .top-bar h2 {
     font-family: "Cormorant Garamond", "Playfair Display", serif;
     font-size: clamp(1.4rem, 4vw, 2rem);
@@ -284,15 +305,6 @@
     animation: fadeSlideDown var(--dur-slow) var(--ease-out) both;
   }
 
-  .game-container {
-    display: grid;
-    grid-template-columns: minmax(240px, 280px) auto minmax(240px, 280px);
-    align-items: start;
-    gap: clamp(20px, 2.5vw, 32px);
-    animation: fadeSlideUp var(--dur-slow) var(--ease-out) 120ms both;
-    width: 100%;
-    justify-content: center;
-  }
 
   .board-wrapper {
     display: flex;
@@ -318,115 +330,6 @@
    ========================================= */
 @layer components {
 
-  /* ---------- Glass Panel ---------- */
-  .glass-panel {
-    background: var(--bg-glass);
-    border: 1px solid var(--bg-glass-border);
-    border-radius: var(--panel-radius);
-    backdrop-filter: blur(28px) saturate(1.3);
-    -webkit-backdrop-filter: blur(28px) saturate(1.3);
-    box-shadow: var(--shadow-panel), var(--shadow-inset-top);
-    padding: 22px;
-    position: relative;
-  }
-
-  .glass-panel + .glass-panel { margin-top: 18px; }
-
-  .glass-panel h3 {
-    font-size: 0.68rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    color: var(--text-muted);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .glass-panel h3::before {
-    content: "";
-    display: inline-block;
-    width: 3px;
-    height: 14px;
-    background: var(--gradient-gold);
-    border-radius: 2px;
-  }
-
-  /* ---------- Player Card ---------- */
-  .player-card {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px;
-    border-radius: 14px;
-    background: var(--bg-surface);
-    border: 1px solid transparent;
-    transition: background var(--dur-base) var(--ease-out),
-                border-color var(--dur-base) var(--ease-out),
-                transform var(--dur-base) var(--ease-out);
-  }
-  .player-card + .player-card { margin-top: 10px; }
-  .player-card.active {
-    background: var(--accent-subtle);
-    border-color: rgba(184, 155, 94, 0.22);
-    box-shadow: 0 0 0 1px rgba(184, 155, 94, 0.08), 0 4px 14px rgba(184, 155, 94, 0.10);
-  }
-
-  .player-avatar {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    font-size: 1.2rem;
-    flex-shrink: 0;
-    position: relative;
-  }
-  .player-avatar.white {
-    background: linear-gradient(145deg, #FFFFFF, #E5E7EB);
-    color: #1F2937;
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.8),
-      0 2px 8px rgba(0,0,0,0.10),
-      0 0 0 1px rgba(15,23,42,0.06);
-  }
-  .player-avatar.black {
-    background: linear-gradient(145deg, #2D3748, #0F1424);
-    color: #F3F4F6;
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.10),
-      0 2px 8px rgba(0,0,0,0.30);
-  }
-
-  .player-info { flex: 1; min-width: 0; }
-  .player-name {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    letter-spacing: -0.005em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .player-label {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    margin-top: 3px;
-    letter-spacing: 0.04em;
-  }
-
-  .turn-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--gold);
-    flex-shrink: 0;
-    box-shadow: 0 0 0 0 var(--accent-glow);
-    animation: pulse 1.8s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); opacity: 1; }
-    50% { box-shadow: 0 0 0 8px transparent; opacity: 0.75; }
-  }
 
   /* ---------- Board Frame ---------- */
   .board-frame {
@@ -598,45 +501,6 @@
     to   { opacity: 1; transform: scale(1); }
   }
 
-  /* ---------- Move History ---------- */
-  .move-list {
-    max-height: 300px;
-    overflow-y: auto;
-    padding-right: 6px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--hairline) transparent;
-    mask-image: linear-gradient(180deg, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
-  }
-  .move-list::-webkit-scrollbar { width: 4px; }
-  .move-list::-webkit-scrollbar-track { background: transparent; }
-  .move-list::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 2px; }
-
-  .move-row {
-    display: grid;
-    grid-template-columns: 28px 1fr 1fr;
-    gap: 6px;
-    padding: 8px 10px;
-    border-radius: 8px;
-    font-size: 0.82rem;
-    font-family: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
-    font-feature-settings: "tnum", "ss01";
-    transition: background var(--dur-fast) var(--ease-out);
-  }
-  .move-row + .move-row { margin-top: 2px; }
-  .move-row:hover { background: var(--bg-surface-hover); }
-  .move-number { color: var(--text-muted); font-weight: 600; text-align: center; }
-  .move-white, .move-black {
-    color: var(--text-secondary);
-    font-weight: 500;
-    padding: 2px 6px;
-    border-radius: 4px;
-  }
-  .move-row:last-child {
-    background: var(--accent-subtle);
-    box-shadow: inset 0 0 0 1px rgba(184, 155, 94, 0.18);
-  }
-  .move-row:last-child .move-white,
-  .move-row:last-child .move-black { color: var(--text-primary); font-weight: 600; }
 
   /* ---------- Status Bar ---------- */
   .status-bar {
@@ -657,20 +521,6 @@
     transition: all var(--dur-base) var(--ease-out);
     text-wrap: balance;
     box-shadow: var(--shadow-sm);
-  }
-  .status-bar.your-turn {
-    background: var(--gradient-accent);
-    border-color: transparent;
-    color: var(--text-on-accent);
-    box-shadow: var(--shadow-button), 0 0 0 1px rgba(184, 155, 94, 0.20);
-  }
-  .status-bar.your-turn::before {
-    content: "";
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--gold);
-    box-shadow: 0 0 12px var(--gold);
-    animation: pulse 1.8s ease-in-out infinite;
   }
 
   /* ---------- Buttons ---------- */
@@ -722,12 +572,6 @@
   }
   .btn-primary:active { transform: translateY(0); background: var(--accent-active); }
 
-  .btn-gold {
-    background: var(--gradient-gold);
-    color: var(--text-on-gold);
-    box-shadow: var(--shadow-glow-gold), inset 0 1px 0 rgba(255,255,255,0.30);
-  }
-  .btn-gold:hover { transform: translateY(-1px); filter: brightness(1.05); }
 
   .btn-secondary {
     background: var(--bg-glass-strong);
@@ -744,11 +588,6 @@
     box-shadow: var(--shadow-button);
   }
 
-  .btn-ghost {
-    background: transparent;
-    color: var(--text-secondary);
-  }
-  .btn-ghost:hover { background: var(--bg-surface-hover); color: var(--text-primary); }
 
   .btn:disabled {
     opacity: 0.45;
