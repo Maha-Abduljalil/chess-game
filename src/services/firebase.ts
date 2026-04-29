@@ -15,10 +15,22 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
+auth.useDeviceLanguage();
 export const db = getFirestore(app);
 export const provider = new GoogleAuthProvider();
 
+
 export async function loginWithGoogle() {
-  const result = await signInWithPopup(auth, provider);
-  return result.user;
+  try {
+    provider.setCustomParameters({
+      prompt: "select_account",
+    });
+
+    const result = await signInWithPopup(auth, provider);
+    return result.user;
+
+  } catch (e) {
+    console.error(e);
+    throw new Error("Google login failed on Safari. Try again.");
+  }
 }
