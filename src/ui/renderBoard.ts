@@ -5,6 +5,7 @@ export interface RenderOptions {
   validMoves?: string[];
   lastMove?: { from: string; to: string } | null;
   inCheck?: string | null;
+  orientation?: "white" | "black"; 
 }
 
 export function renderBoard(
@@ -16,8 +17,13 @@ export function renderBoard(
 ) {
   container.innerHTML = "";
   container.className = "chess-board";
-  const files = ["a","b","c","d","e","f","g","h"];
-  const ranks = ["8","7","6","5","4","3","2","1"];
+  const flipped = (options.orientation ?? "white") === "black";
+  const files = flipped
+    ? ["h","g","f","e","d","c","b","a"]
+    : ["a","b","c","d","e","f","g","h"];
+  const ranks = flipped
+    ? ["1","2","3","4","5","6","7","8"]
+    : ["8","7","6","5","4","3","2","1"];
 
   const validSet = new Set(options.validMoves ?? []);
   const lastFrom = options.lastMove?.from ?? null;

@@ -871,7 +871,212 @@
     overflow: hidden; clip: rect(0,0,0,0);
     white-space: nowrap; border: 0;
   }
+
+  /* ---------- Time-control selector ---------- */
+  .time-control-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .tc-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .tc-select {
+    flex: 1;
+    padding: 10px 14px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--bg-glass-border);
+    border-radius: var(--control-radius);
+    color: var(--text-primary);
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    appearance: auto;
+    transition:
+      border-color var(--dur-base) var(--ease-out),
+      box-shadow   var(--dur-base) var(--ease-out);
+    box-shadow: var(--shadow-xs);
+    min-height: 42px;
+  }
+  .tc-select:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 4px var(--accent-glow), var(--shadow-xs);
+  }
+
+  /* ---------- Board column (stacks timers + board + status) ---------- */
+  .board-column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+    width: 100%;
+    max-width: min(90vw, 600px);
+    margin: 0 auto;
+  }
+
+  /* ---------- Timer cards ---------- */
+  .timer-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-radius: 14px;
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--bg-glass-border);
+    box-shadow: var(--shadow-sm);
+    transition:
+      background      var(--dur-base) var(--ease-out),
+      border-color    var(--dur-base) var(--ease-out),
+      box-shadow      var(--dur-base) var(--ease-out);
+    min-height: 58px;
+  }
+
+  .timer-card.active {
+    background: var(--bg-glass-strong);
+    border-color: var(--gold);
+    box-shadow: var(--shadow-glow-gold), var(--shadow-sm);
+  }
+
+  .timer-card.low-time {
+    border-color: var(--danger) !important;
+    animation: timerPulse 0.9s ease-in-out infinite;
+  }
+
+  @keyframes timerPulse {
+    0%, 100% { box-shadow: 0 0 0 0   rgba(239, 68, 68, 0.00), var(--shadow-sm); }
+    50%       { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.30), var(--shadow-sm); }
+  }
+
+  .timer-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .timer-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .timer-dot--white {
+    background: #ffffff;
+    border: 1.5px solid rgba(0, 0, 0, 0.18);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  }
+  .timer-dot--black {
+    background: #1a1a2e;
+    border: 1.5px solid rgba(255,255,255,0.12);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+  }
+
+  .timer-player-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .timer-display {
+    font-family: "JetBrains Mono", ui-monospace, "Cascadia Code", monospace;
+    font-size: clamp(1.25rem, 4.5vw, 1.65rem);
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.06em;
+    font-feature-settings: "tnum";
+    transition: color var(--dur-base) var(--ease-out);
+    min-width: 4.5ch;
+    text-align: right;
+  }
+
+  .timer-card.active .timer-display { color: var(--gold); }
+  .timer-card.low-time .timer-display { color: var(--danger); }
+
+  /* ---------- Spectator controls (top-bar) ---------- */
+  .spectator-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 14px;
+    border-radius: 10px;
+    background: var(--bg-glass);
+    border: 1px solid var(--bg-glass-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .spectator-badge {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ---------- Player names bar (spectator, above timers) ---------- */
+  .player-names-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    background: var(--bg-surface);
+    border: 1px solid var(--hairline);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-align: center;
+    flex-wrap: wrap;
+  }
+
+  .player-name-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-family: ui-monospace, monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .player-name-chip--white {
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--text-primary);
+    border: 1px solid rgba(0,0,0,0.12);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.10);
+  }
+
+  .player-name-chip--black {
+    background: rgba(26, 26, 46, 0.85);
+    color: #e2e8f0;
+    border: 1px solid rgba(255,255,255,0.10);
+  }
+
+  .vs-sep {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
 }
+
 
 /* =========================================
    7. Responsive
