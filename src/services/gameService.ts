@@ -35,19 +35,28 @@ export async function createGame(
   userId: string,
   timeControl: TimeControl = { initialMs: 600_000, incrementMs: 0 }
 ) {
+  if (!userId) {
+    throw new Error("Cannot create game: No User ID provided.");
+  }
+
   const chess = new Chess();
 
-  const docRef = await addDoc(gamesCollection, {
-    players: { white: userId, black: null },
-    fen: chess.fen(),
-    turn: "white",
-    status: "waiting",
-    timeControl,
-    timers: { white: timeControl.initialMs, black: timeControl.initialMs },
-    timerStartedAt: 0, 
-  });
+  try {
+    const docRef = await addDoc(gamesCollection, {
+      players: { white: userId, black: null },
+      fen: chess.fen(),
+      turn: "white",
+      status: "waiting",
+      timeControl,
+      timers: { white: timeControl.initialMs, black: timeControl.initialMs },
+      timerStartedAt: 0, 
+    });
 
-  return docRef.id;
+    return docRef.id;
+  } catch (error) {
+    console.error("Firestore createGame error:", error);
+    throw error;
+  }
 }
 
 export async function joinGame(gameId: string, userId: string) {

@@ -128,4 +128,11 @@ export class Game {
     }
     return false;
   }
+
+  getLastMove(): { from: string; to: string } | null {
+    const history = this.chess.history({ verbose: true });
+    if (history.length === 0) return null;
+    const last = history[history.length - 1];
+    return { from: last.from, to: last.to };
+  }
 }
