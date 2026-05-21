@@ -1,4 +1,4 @@
-import { engineService, EvaluationData } from "../services/engineService";
+import { analysisEngine, EvaluationData } from "../services/engineService";
 
 export class SpectatorController {
   private updateUI: (evalData: EvaluationData, bestMove: string) => void;
@@ -9,11 +9,8 @@ export class SpectatorController {
   }
 
   public analyzePosition(fen: string) {
-    engineService.evaluatePosition(fen, (data) => {
-      this.updateUI(data, this.currentBestMove);
-    });
-    
-    engineService.findBestMove(fen, "expert", (bestMove) => {
+    this.currentBestMove = "—";
+    analysisEngine.findBestMove(fen, "expert", (bestMove) => {
       this.currentBestMove = bestMove;
     }, (data) => {
        this.updateUI(data, this.currentBestMove);
@@ -21,6 +18,6 @@ export class SpectatorController {
   }
 
   public stop() {
-    engineService.stop();
+    analysisEngine.stop();
   }
 }

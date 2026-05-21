@@ -131,4 +131,5 @@ export class StockfishEngine {
   }
 }
 
-export const engineService = new StockfishEngine();
+export const gameEngine = new StockfishEngine();
+export const analysisEngine = new StockfishEngine();

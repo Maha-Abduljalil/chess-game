@@ -16,6 +16,8 @@ import { sendChatMessage, listenToChat } from "../services/chatService";
 import { renderChatMessages } from "./renderChat";
 import { auth } from "../services/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { getProfile, getAvatarUrl, syncWithAuthUser, recordGameResult } from "../services/profileService";
+import { renderProfileScreen } from "./renderProfile";
 
 const TIME_PRESETS: { label: string; value: TimeControl }[] = [
   { label: "1 min  (Bullet)",    value: { initialMs:   60_000, incrementMs:     0 } },
@@ -91,7 +93,7 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
           </div>
         </div>
 
-        <div id="user-area" class="user-area"></div>
+        <div id="profile-area"></div>
       </div>
     </div>
 
@@ -186,7 +188,10 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
   onAuthStateChanged(auth, (user) => {
     console.log("Auth state changed:", user ? `Logged in as ${user.displayName}` : "Logged out");
     currentUser = user;
-    renderCurrentUser();
+    if (user) {
+      syncWithAuthUser({ displayName: user.displayName, photoURL: user.photoURL });
+    }
+    renderProfileButton();
     const loginBtn = document.getElementById("login");
     if (loginBtn) {
       loginBtn.style.display = user ? "none" : "block";
@@ -203,6 +208,7 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
   let isFirstSnapshot = true;
   let isSpectator     = false;
   let boardFlipped    = false;
+  let gameResultRecorded = false;
   
   let aiController: AIGameController | null = null;
   let spectatorController: SpectatorController | null = null;
@@ -374,11 +380,33 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
     gameScreen.classList.toggle("hidden", !active);
   }
 
-  function renderCurrentUser() {
-    const ua = document.getElementById("user-area")!;
-    ua.innerHTML = currentUser
-      ? `<div class="user-badge"><div class="user-icon">✓</div><div><div class="user-name">${currentUser.displayName}</div><div class="user-status">Online</div></div></div>`
-      : "";
+  function renderProfileButton() {
+    const pa = document.getElementById("profile-area")!;
+    if (!pa) return;
+    const profile = getProfile();
+    const avatarSrc = getAvatarUrl(profile);
+    pa.innerHTML = `
+      <button id="profile-btn" class="profile-btn-landing">
+        <img src="${avatarSrc}" alt="Profile" class="profile-btn-avatar" />
+        <div class="profile-btn-info">
+          <span class="profile-btn-name">${profile.username}</span>
+          <span class="profile-btn-stats">${profile.gamesPlayed} games · ${profile.wins}W / ${profile.losses}L</span>
+        </div>
+        <svg class="profile-btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    `;
+    document.getElementById("profile-btn")!.onclick = () => {
+      renderProfileScreen(app, () => {
+        // Re-init the entire UI when coming back from profile
+        initChessUI(loginWithGoogle);
+      });
+    };
+  }
+
+  function recordResult(outcome: "win" | "loss" | "draw") {
+    if (gameResultRecorded) return;
+    gameResultRecorded = true;
+    recordGameResult(outcome);
   }
 
   function getValidMoves(): string[] {
@@ -477,12 +505,28 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
         gameOverTitleSide.textContent   = "Checkmate!";
         const winner = aiController ? (game.turn === "white" ? "Black" : "White") : currentGameData!.winner;
         gameOverMsgSide.textContent = `${winner} wins.`;
+        // Record profile stats
+        if (!aiController && currentUserColor && currentGameData) {
+          const winnerColor = currentGameData.winner;
+          const myColor = currentUserColor === "white" ? "White" : "Black";
+          recordResult(winnerColor === myColor ? "win" : "loss");
+        }
       } else if (s === "timeout") {
         gameOverTitleSide.textContent   = "Time's Up!";
         gameOverMsgSide.textContent = `${currentGameData!.winner} wins on time.`;
+        // Record profile stats
+        if (!aiController && currentUserColor && currentGameData) {
+          const winnerColor = currentGameData.winner;
+          const myColor = currentUserColor === "white" ? "White" : "Black";
+          recordResult(winnerColor === myColor ? "win" : "loss");
+        }
       } else {
         gameOverTitleSide.textContent   = "Draw";
         gameOverMsgSide.textContent = s === "stalemate" ? "Stalemate!" : "Game ended in a draw.";
+        // Record draw
+        if (!isSpectator && !aiController) {
+          recordResult("draw");
+        }
       }
     } else {
       gameOverSide.classList.add("hidden");
@@ -671,7 +715,6 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
   document.getElementById("login")!.onclick = async () => {
     try {
       currentUser = await loginWithGoogle();
-      renderCurrentUser();
       document.getElementById("login")!.style.display = "none";
       showToast(`Welcome, ${currentUser.displayName}!`);
     } catch { showToast("Login failed. Please try again."); }
@@ -682,6 +725,7 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
     
     if (aiController) { aiController.stop(); aiController = null; }
     if (spectatorController) { spectatorController.stop(); spectatorController = null; }
+    gameResultRecorded = false;
     
     const sel    = document.getElementById("time-control") as HTMLSelectElement;
     const preset = TIME_PRESETS[Number(sel.value)] ?? TIME_PRESETS[5];
@@ -713,6 +757,7 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
 
     if (aiController) { aiController.stop(); aiController = null; }
     if (spectatorController) { spectatorController.stop(); spectatorController = null; }
+    gameResultRecorded = false;
 
     try {
       const existing = await getGame(enteredId);
@@ -757,6 +802,7 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
     if (aiController) { aiController.stop(); }
     if (spectatorController) { spectatorController.stop(); spectatorController = null; }
     if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+    gameResultRecorded = false;
 
     game = new Game();
     currentUserColor = side as "white" | "black";
@@ -832,7 +878,7 @@ export function initChessUI(loginWithGoogle: () => Promise<any>) {
   };
 
   setGameScreenActive(false);
-  renderCurrentUser();
+  renderProfileButton();
   refresh();
 }
 
